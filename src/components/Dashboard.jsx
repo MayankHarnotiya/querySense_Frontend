@@ -8,26 +8,27 @@ import AdminModal from './AdminModal'
 import { Logo } from './ui'
 import { api } from '../api'
 
-function loadHistory() { try { return JSON.parse(localStorage.getItem('qs_history') || '[]') } catch { return [] } }
-function saveHistory(h) { try { localStorage.setItem('qs_history', JSON.stringify(h)) } catch {} }
+function historyKey(username) { return `qs_history:${username || 'anon'}` }
+function loadHistory(username) { try { return JSON.parse(localStorage.getItem(historyKey(username)) || '[]') } catch { return [] } }
+function saveHistory(username, h) { try { localStorage.setItem(historyKey(username), JSON.stringify(h)) } catch {} }
 
 export default function Dashboard({ token, username, role, onLogout, theme, onToggleTheme }) {
   const [question, setQuestion] = useState('')
   const [result, setResult] = useState(null)
   const [busy, setBusy] = useState(false)
   const [size, setSize] = useState(50)
-  const [history, setHistory] = useState(loadHistory)
+const [history, setHistory] = useState(() => loadHistory(username))
   const [dataset, setDataset] = useState(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const last = useRef(null)
 
   const pushHistory = useCallback((q) => {
-    setHistory((h) => {
-      const next = [q, ...h.filter((x) => x !== q)].slice(0, 25)
-      saveHistory(next); return next
-    })
-  }, [])
+  setHistory((h) => {
+    const next = [q, ...h.filter((x) => x !== q)].slice(0, 25)
+    saveHistory(username, next); return next
+  })
+}, [username])
 
   const execute = useCallback(async ({ question: q, page, size: sz }) => {
     last.current = { question: q, page, size: sz }
