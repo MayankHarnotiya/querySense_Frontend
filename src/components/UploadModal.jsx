@@ -14,7 +14,11 @@ export default function UploadModal({ open, onClose, token, onUploaded }) {
 
   function pick(f) { if (!f) return; setFile(f); setMsg(null); if (!table) setTable(f.name.replace(/\.[^.]+$/, '')) }
 
-  async function doUpload() {
+async function doUpload() {
+    if (!file) { setMsg({ type: 'err', text: 'Choose a CSV file first.' }); return }
+    setBusy(true); setMsg(null)
+    const r = await uploadCsv(file, table.trim(), token)
+    setBusy(false)
     if (r.ok) {
       setDone({ table: r.data.table, rows: r.data.rowsInserted, cols: (r.data.columns || []).length })
       setMsg({ type: 'ok', text: `Loaded into "${r.data.table}". Closing…` })
